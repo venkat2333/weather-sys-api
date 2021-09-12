@@ -1,0 +1,15 @@
+anypoint:
+  platform:
+     client_id=![FTzAxRBJsyF0XxasguxeskSdx4ahQF8ySJi7PeyKBOUZhGertzi6fkMKdLV6fsFz]
+     client_secret=![yfsB44p4fbpvQX9VsQF2oBWKn20uar/vWgN4ZfW23XAkMKarr+Hz4uovU2tSyicY]
+      
+api:
+  id: "17128105"
+  name: "weather-sys-api"
+  version: "v1"
+  path: "/api/system/v1/weather"
+    
+http:
+  port: "443"
+  host: "api.openweathermap.org"
+  path: "/data/2.5/weather"

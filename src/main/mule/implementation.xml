@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	
+	<flow name="weatherDetails" doc:id="ca5614b5-0790-4889-bc10-7d30b9743b25" >
+		<logger level="INFO" doc:name="Logger" doc:id="d1c6a2fc-ffa7-457f-a3e0-f591fcfed603" message="Request received for postal code: #[attributes.queryParams.postalcode]"/>
+		<set-variable value="#[attributes.queryParams.postalcode]" doc:name="Store postalcode" doc:id="4a3515ce-9e8c-4be8-b834-adbf31f16d27" variableName="postalcode"/>
+		<logger level="INFO" doc:name="Logs Request" doc:id="5f8d4823-ed4f-4622-97d8-8eb91bd464fd" message="Sending request to get weather details for postalcode #[vars.postalcode]"/>
+		<http:request method="GET" doc:name="Weather API" doc:id="917556c6-a4e7-4f17-86a5-61406ebab8c9" config-ref="HTTP_Request_configuration" path="${http.path}">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	zip : vars.postalcode,
+	APPID : "6e71acab551df5fb9790d728c133cee9",
+	"units" : "imperial"
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="8a23487a-af32-4bb7-a5c8-8dbca1bee57e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logs Response" doc:id="d429fa10-9ba4-4a27-8045-3108665d019c" message="Response received from weather api for postal code #[vars.postalcode]. Payload #[payload]"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="29c6b854-c529-4ee4-8b25-a9d3da90edbf" >
+				<logger level="INFO" doc:name="Logger" doc:id="7ff5b2fd-8cb6-419c-a8ab-a33767cd5fcd" message="Error in #[flow]: #[error]"/>
+				<ee:transform doc:name="Transform Message" doc:id="74e12e74-3cf8-4d49-b378-4df341529851" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "API error: " ++ (error.description default "")
+} ]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[500]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
